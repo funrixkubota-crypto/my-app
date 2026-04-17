@@ -1,542 +1,428 @@
 "use client";
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { 
-  Briefcase, 
-  Building2, 
   ChevronLeft, 
   ChevronRight, 
-  Award, 
-  TrendingUp, 
+  MapPin, 
   Clock, 
-  Calendar, 
   Heart, 
-  Target, 
   ShieldCheck, 
-  ArrowRight,
-  MapPin,
-  Wallet,
-  Users,
-  CheckCircle2,
-  HardHat
+  TrendingUp, 
+  Briefcase, 
+  Building2, 
+  CheckCircle2, 
+  Info,
+  Coffee,
+  Calendar,
+  Home,
+  MessageCircle,
+  AlertCircle
 } from 'lucide-react';
 
-// --- データ定義 ---
+const App = () => {
+  const [activeTab, setActiveTab] = useState('job'); // 'job' or 'company'
+  const [currentSlide, setCurrentSlide] = useState(0);
 
-const JOB_TYPES = [
-  {
-    id: 'counter-sales',
-    title: 'カウンターセールス',
-    icon: <Users className="w-5 h-5" />,
-    slides: [
-      {
-        type: 'definition',
-        title: '職種定義：待ちの営業への変換',
-        content: '飛込や架電ではなく、来店されたニーズのある顧客へ提案。坂戸様の「年間100台」の販売実績は、ここでも「成約率の高さ」として直接転用可能です。',
-        stats: '成約率：業界平均 25-35%',
-        image: 'https://images.unsplash.com/photo-1556740734-7f96267b118a?auto=format&fit=crop&q=80&w=800'
-      },
-      {
-        type: 'path',
-        title: 'キャリアパス：マネジメントへの再現性',
-        content: 'メンバー → 店長代理 → 店長 → エリアマネージャー。属人性を排除した「店舗運営マニュアル」があるため、努力の方向性が明確です。',
-        milestones: ['1年目: 業務習得', '3年目: リーダー', '5年目: 店長候補'],
-        image: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80&w=800'
-      },
-      {
-        type: 'focus',
-        title: '重点訴求：評価の透明性',
-        content: '「誰に気に入られるか」ではなく「KPI（成約数・単価）をどれだけ達成したか」で評価。中古車販売で培った数字への執着心がそのまま報酬に直結します。',
-        badge: '成果連動型'
-      },
-      {
-        type: 'relief',
-        title: '不安払拭：ワークライフバランス',
-        content: 'サービス業ですが、シフト管理が徹底されており、サービス残業は皆無。業界平均残業時間は月15〜20時間程度に抑制されています（厚生労働省統計比較）。',
-        image: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&q=80&w=800'
-      },
-      {
-        type: 'match',
-        title: 'スキルマッチ：坂戸様の強み',
-        content: '「顧客ヒアリングをもとに課題分析」という職務経歴書の強みは、プラン提案の要。1分単位の残業代支給など、ホワイトな環境で営業力を再定義できます。',
-        checks: ['対人折衝力', '課題分析力', '安定した成約実績']
-      }
-    ]
-  },
-  {
-    id: 'manufacturing',
-    title: 'ものづくり（技能職）',
-    icon: <Briefcase className="w-5 h-5" />,
-    slides: [
-      {
-        type: 'definition',
-        title: '職種定義：技術の資産化',
-        content: '大手メーカー内での製造・検査業務。坂戸様が経験された「整備補助（タイヤ・オイル交換）」の正確性と、立ち仕事への耐性が即戦力として評価されます。',
-        stats: '未経験からの習得率 95%以上',
-        image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=800'
-      },
-      {
-        type: 'path',
-        title: 'キャリアパス：班長・労務管理',
-        content: '現場のスペシャリストだけでなく、リーダー（班長）や、派遣スタッフを管理する「労務管理職」への転向パスが用意されています。',
-        milestones: ['2年目: 工程リーダー', '5年目: 労務管理/正社員登用'],
-        image: 'https://images.unsplash.com/photo-1513128034602-7814ccaddd4e?auto=format&fit=crop&q=80&w=800'
-      },
-      {
-        type: 'focus',
-        title: '重点訴求：岩手で腰を据えて稼ぐ',
-        content: 'トヨタ紡織東北等の大手工場勤務。交代制勤務による深夜手当・残業手当が確実に付帯し、月収例24万〜30万円と地方でも高水準を維持。',
-        badge: '地域密着・高収入'
-      },
-      {
-        type: 'relief',
-        title: '不安払拭：10年で1000万貯金',
-        content: '寮完備・住宅手当があるため、可処分所得が極めて高いのが特徴。営業のような浮き沈みがなく、計画的な資産形成が可能です。',
-        image: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=800'
-      },
-      {
-        type: 'match',
-        title: 'スキルマッチ：坂戸様の強み',
-        content: '「軽整備経験」は製造現場での機械理解に直結。また、飲食・営業で培った「指示を正確に理解し動く力」は、高度な生産ラインで重宝されます。',
-        checks: ['整備補助経験', '体力・忍耐力', '正確な業務遂行']
-      }
-    ]
-  },
-  {
-    id: 'engineer-support',
-    title: '施工管理・技術補助',
-    icon: <HardHat className="w-5 h-5" />,
-    slides: [
-      {
-        type: 'definition',
-        title: '職種定義：プロジェクトの指揮者',
-        content: '工事が図面通り進むよう、写真撮影や工程管理を行う「管理のプロ」。坂戸様の「マルチタスク能力」と「調整力」が武器になります。',
-        stats: '求人倍率 6.0倍以上の超安定市場',
-        image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=800'
-      },
-      {
-        type: 'path',
-        title: 'キャリアパス：国家資格での市場価値',
-        content: '施工管理技士などの国家資格を取得することで、会社に依存しない「個人の価値」が最大化。年収700万以上のシニアクラスも現実的です。',
-        milestones: ['1-3年目: 資格取得・補助', '5年目: 一人前・年収アップ'],
-        image: 'https://images.unsplash.com/photo-1454165833767-027ffea9e7a7?auto=format&fit=crop&q=80&w=800'
-      },
-      {
-        type: 'focus',
-        title: '重点訴求：資格による確実な昇給',
-        content: '「頑張れば上がる」という曖昧な評価ではなく、「この資格を取れば月○万円アップ」という明確な規程。坂戸様の学習意欲を成果に変換します。',
-        badge: '手に職・資格重視'
-      },
-      {
-        type: 'relief',
-        title: '不安払拭：未経験研修の充実',
-        content: '入社後1ヶ月の集中研修（BREXAやアーキ・ジャパン）により、専門知識ゼロからスタート。同期の多くが異業種（販売・飲食）出身です。',
-        image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=80&w=800'
-      },
-      {
-        type: 'match',
-        title: 'スキルマッチ：坂戸様の強み',
-        content: '営業で培った「クレーム対応力」や「関係構築力」は、現場の職人さんとの円滑なコミュニケーションに不可欠。調整のプロとしての素質があります。',
-        checks: ['コミュニケーション力', '学習意欲', '調整・管理能力']
-      }
-    ]
-  }
-];
+  const candidateName = "市原 舞吏菜";
+  const location = "香川県 高松市 (はしおか駅)";
 
-const COMPANIES = [
-  {
-    name: '株式会社アーキ・ジャパン',
-    tag: '施工管理・環境保全',
-    slides: [
-      {
-        title: '企業概要：圧倒的な育成体制',
-        content: '建設プロジェクトを支える管理者を育成。未経験からでも「市場価値の高い技術者」へ育てることに特化した、成長率No.1の建設コンサル企業。',
-        points: ['従業員数 3,447名', '平均残業 20時間以内', '全国各所に配属可能']
-      },
-      {
-        title: '重点：手に職×年収アップ推移',
-        content: '資格取得を強力にサポート。取得した資格に応じて手当が加算され、20代で年収500万を突破する実例が多数あります。',
-        income: '年収例: 382万円(20歳) → 504万円(26歳) → 756万円(32歳)',
-        badge: '資格手当充実'
-      },
-      {
-        title: 'ライフイベント支援',
-        content: '産休・育休の取得実績100%（2023年度）。結婚・育児という将来のライフイベントを、経済的・時間的ゆとりを持って迎えることが可能です。',
-        perks: ['社宅制度', '帰省旅費支給', '家族手当']
-      },
-      {
-        title: '勤務条件（事実確認済み）',
-        content: '土日祝休み（週休2日）。年間休日114日＋有給取得を推奨。勤務地は希望を考慮し、地元岩手や東北エリアでの就業も相談可能。',
-        terms: ['給与: 月給25万〜（残業代別途）', '昇給: 年1回', '賞与: 年2回']
-      }
-    ]
-  },
-  {
-    name: 'エヌエス・テック株式会社',
-    tag: '技能職（トヨタ紡織東北）',
-    slides: [
-      {
-        title: '企業概要：大手メーカーの製造パートナー',
-        content: '設立50年の安定企業。今回は岩手県金ヶ崎町の「トヨタ紡織東北」工場での勤務。車内装品（シート等）の製造に携わります。',
-        points: ['岩手県内での就業確実', '大手トヨタグループの安心感', '車通勤必須（駐車場完備）']
-      },
-      {
-        title: '重点：未経験から月収30万超へ',
-        content: '基本給に加え、深夜・交替・残業手当が合算。2直交代制により、手取り25万〜（坂戸様の現職不満を解消）を実現しやすい構造。',
-        income: '想定年収: 300万円 〜 350万円（初年度）',
-        badge: '高収入・低支出'
-      },
-      {
-        title: 'ライフイベント支援',
-        content: '独身寮・家族寮完備。引越費用全額会社負担。将来的に「製造から労務管理」へのキャリアチェンジパスもあり、長く勤められる環境。',
-        perks: ['賞与年2回', '社会保険完備', '退職金制度(規定有)']
-      },
-      {
-        title: '勤務条件（事実確認済み）',
-        content: '年間休日121日。GW・夏季・年末年始の長期休暇あり。オンオフを切り替え、趣味や貯金に充てる時間を確保できます。',
-        terms: ['給与: 時給1,250円〜', '休日: 土日休み', '勤務地: 岩手県胆沢郡金ケ崎町']
-      }
-    ]
-  },
-  {
-    name: '株式会社BREXA Engineering',
-    tag: '施工管理（旧 共同エンジニアリング）',
-    slides: [
-      {
-        title: '企業概要：グローバル展開の建設コンサル',
-        content: '国内22拠点、海外にも展開する大手。建築・土木・プラントと幅広く、坂戸様の「整備補助」の経験を技術者としての土台に活かせます。',
-        points: ['従業員数 4,302名', '東証プライム上場グループ', '充実のWeb研修']
-      },
-      {
-        title: '重点：研修中も給与全額支給',
-        content: '入社後のオンライン研修期間中も給与支給。現場配属後は基本給22万＋残業代全額支給。1分単位の計算で、サービス残業を根絶。',
-        income: '配属時基本給: 220,000円〜',
-        badge: '透明な給与体系'
-      },
-      {
-        title: 'ライフイベント支援',
-        content: '福利厚生倶楽部など、プライベートの充実を支援する制度。借上寮制度により、固定費を抑えて1,000万貯金の目標を加速させます。',
-        perks: ['引越費用会社負担', '帰省旅費', '資格取得支援金']
-      },
-      {
-        title: '勤務条件（事実確認済み）',
-        content: '完全週休2日制（土日祝）。年間休日120日前後。岩手・宮城などの希望勤務地への配属を最大限考慮。',
-        terms: ['残業: 全額支給(1分単位)', '面接: オンライン1回(即日内定有)', '最短2週間入社可能']
-      }
-    ]
-  }
-];
+  // Section A: Job Types (5 slides per job)
+  const jobSlides = [
+    {
+      title: "一般事務・営業事務",
+      slides: [
+        {
+          id: 1,
+          tag: "職種定義",
+          header: "未経験から始める「支える」プロフェッショナル",
+          content: "書類作成やデータ入力を通じて、企業の円滑な運営を支える重要なポジションです。市原様の「店舗マニュアル作成」や「正確な書類確認」の経験がそのまま活かせます。",
+          points: ["PCによるデータ入力・集計", "各種伝票整理・管理", "来客・電話対応"],
+          image: "https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?auto=format&fit=crop&q=80&w=800",
+          footer: "※事務職の有効求人倍率は他職種より低めですが、サポート力重視の企業が多数あります。"
+        },
+        {
+          id: 2,
+          tag: "キャリアパス",
+          header: "安定と専門性を手に入れるステップ",
+          content: "まずは一般事務として基礎を固め、将来的には専門事務や管理職への道も。市原様の「教えるのが好き」という強みは、将来のリーダー候補としても期待されます。",
+          points: ["1-2年目：実務習得、効率化の提案", "3-5年目：リーダー、新人教育担当", "将来：管理部門の責任者や専門職"],
+          image: "https://images.unsplash.com/photo-1454165833968-5179399952d7?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 3,
+          tag: "重点訴求",
+          header: "ライフスタイルを最優先できる「時間」の確保",
+          content: "事務職の最大の魅力は、予測可能なスケジュールです。愛犬のお世話や、自分自身の休息時間をしっかりと確保できる環境を目指せます。",
+          points: ["土日祝休みが基本", "残業月10h〜20h以下の求人が中心", "定時退社でプライベート時間を充実"],
+          image: "https://images.unsplash.com/photo-1544568100-847a948585b9?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 4,
+          tag: "不安払拭",
+          header: "「正社員×事務」の安定性（事実データ）",
+          content: "doda等の市場調査によると、事務職は離職率が低く、一度スキルを身につければ全国どこでも通用する「手に職」の側面を持っています。",
+          points: ["業界平均残業時間：10.3時間（事務職全般）", "ワークライフバランス満足度：全職種中トップクラス", "派遣から「無期雇用派遣」への転換で雇用安定"],
+          image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=800",
+          footer: "出典：厚生労働省「賃金構造基本統計調査」および求人市場トレンド"
+        },
+        {
+          id: 5,
+          tag: "スキルマッチ",
+          header: "市原様の「今」が、事務にどう繋がるか",
+          content: "調理師時代の「マルチタスク管理」と施工管理補助の「正確な書類作成・確認力」は、事務職において最も求められる『正確性』に直結します。",
+          points: ["店舗運営経験 ＝ 自律的な判断力", "施工管理補助 ＝ 期日厳守と確認のプロ", "マニュアル作成 ＝ 業務フロー構築力"],
+          image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=800"
+        }
+      ]
+    },
+    {
+      title: "施工管理（安定環境）",
+      slides: [
+        {
+          id: 1,
+          tag: "職種定義",
+          header: "街づくりの司令塔としてキャリアを再構築",
+          content: "現在の経験を無駄にせず、より「ホワイト」な環境での施工管理です。現在の「味方がいない」状況ではなく、チームで協力する体制が整った企業を厳選します。",
+          points: ["工程・安全・品質の管理", "現場写真の整理、書類作成", "協力会社との調整業務"],
+          image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 2,
+          tag: "キャリアパス",
+          header: "資格取得で市場価値を最大化",
+          content: "実務経験を積みながら「施工管理技士」の資格を取得。一度取得すれば、香川県内でも一生仕事に困らない強固なキャリアとなります。",
+          points: ["3年以内：2級施工管理技士取得", "5年以降：1級取得、大規模案件担当", "年収：400万円〜600万円以上も可能"],
+          image: "https://images.unsplash.com/photo-1541888941259-7927ed14375f?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 3,
+          tag: "重点訴求",
+          header: "「移動なし・香川限定」の働き方を実現",
+          content: "現在の「片道2時間」「ガソリン代自腹」という過酷な状況を解消します。通勤時間を短縮し、心身の負担を最小限に抑えます。",
+          points: ["香川県内案件100%の企業を選定", "通勤手当の全額支給（または車両手当）", "直行直帰で自由な時間を最大化"],
+          image: "https://images.unsplash.com/photo-1517581177682-a085bb7ffb15?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 4,
+          tag: "不安払拭",
+          header: "建設業界の働き方改革（2024年問題）",
+          content: "2024年4月から残業上限規制が完全適用。大手・準大手を中心に、休日数が増加し、サービス残業が厳格に禁止されるようになっています。",
+          points: ["建設業の週休2日推進率：約70%（向上中）", "ICT導入による書類作成時間の削減", "コンプライアンス重視の企業増加"],
+          image: "https://images.unsplash.com/photo-1503387762-592dea580446?auto=format&fit=crop&q=80&w=800",
+          footer: "出典：国土交通省「建設業における働き方改革の現状」"
+        },
+        {
+          id: 5,
+          tag: "スキルマッチ",
+          header: "即戦力としての価値",
+          content: "BREXAでの半年以上の実務経験は、未経験者とは一線を画します。「安全書類」「墨出し」「写真管理」が理解できている点は大きな武器です。",
+          points: ["現場の空気感がわかる ＝ 即戦力", "専門用語がわかる ＝ 研修コスト低", "市原様独自の「誠実な対応」が強み"],
+          image: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=800"
+        }
+      ]
+    }
+  ];
 
-// --- メインコンポーネント ---
+  // Section B: Company Specific (4 slides per company)
+  const companySlides = [
+    {
+      name: "スタッフサービス（ミラエール）",
+      slides: [
+        {
+          id: 1,
+          tag: "概要",
+          header: "常用型派遣で叶える「事務職正社員」",
+          content: "スタッフサービスの「ミラエール」は、自社の正社員として採用し、契約企業へ派遣する形。未経験者のサポートに特化しています。",
+          points: ["雇用形態：正社員（無期雇用派遣）", "研修：Word/Excel/マナーの充実", "実績：累計1万人以上の事務職を輩出"],
+          image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 2,
+          tag: "重点訴求",
+          header: "残業が少なく、香川県内でずっと働ける",
+          content: "求人票記載の通り、残業を抑制する方針。過度な残業がある場合は、スタッフサービスの担当者が企業に指導します。",
+          points: ["勤務地：香川県（転勤なし）", "残業：月平均実績10時間程度（全社平均）", "土日祝休みでプライベート優先"],
+          image: "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 3,
+          tag: "ライフイベント支援",
+          header: "女性が長く続けられる福利厚生",
+          content: "産休・育休の取得実績が豊富。将来、家庭環境が変わっても続けやすい環境が整っています。",
+          points: ["産前産後休暇・育児休業制度完備", "メンタルヘルスケア制度", "定期健康診断の実施"],
+          image: "https://images.unsplash.com/photo-1522204538344-922f76cee040?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 4,
+          tag: "勤務条件（Fact）",
+          header: "求人票に基づく正確なデータ",
+          content: "給与面の不安を解消するため、固定月給を約束。現在の「現場がないと給与が出ない」という状況はありません。",
+          points: ["想定年収：200〜250万円", "賞与：年2回支給あり", "交通費：全額支給"],
+          image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=800"
+        }
+      ]
+    },
+    {
+      name: "マンパワーグループ",
+      slides: [
+        {
+          id: 1,
+          tag: "概要",
+          header: "グローバル企業の安定性と手厚いフォロー",
+          content: "世界70カ国で展開する大手。日本初の派遣会社としてのノウハウを活かし、あなたのキャリアを丁寧に設計します。",
+          points: ["雇用形態：正社員（無期雇用派遣）", "転勤：なし（地域密着型）", "在宅ワーク実績あり（配属先による）"],
+          image: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 2,
+          tag: "重点訴求",
+          header: "残業月平均5時間で、愛犬との時間を",
+          content: "求人票にて「月平均5時間」という非常に低い数値を掲げています。ワークライフバランスを最重視する方に最適です。",
+          points: ["年間休日：120日以上", "残業：ほぼなし（月平均5時間）", "配属先も厳選されたホワイト企業"],
+          image: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 3,
+          tag: "ライフイベント支援",
+          header: "充実の福利厚生と「安心」",
+          content: "マンパワーグループ独自のベネフィットプランが利用可能。プライベートの充実を会社が支援します。",
+          points: ["マンパワーグループ・クラブオフ（宿泊・レジャー割引）", "教育訓練（キャリアアップ支援）", "各種社会保険完備"],
+          image: "https://images.unsplash.com/photo-1521791136064-7986c2959213?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 4,
+          tag: "勤務条件（Fact）",
+          header: "給与・待遇の透明性",
+          content: "現在の「自腹」負担をゼロに。しっかりとした条件面で、将来への不安を取り除きます。",
+          points: ["年収：200〜300万円（香川エリア：月給17.5万〜）", "試用期間：6ヶ月（条件変動なし）", "昇給あり・交通費全額支給"],
+          image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=800"
+        }
+      ]
+    },
+    {
+      name: "ウィルオブ・コンストラクション",
+      slides: [
+        {
+          id: 1,
+          tag: "概要",
+          header: "建設業界の地位向上を目指す革新企業",
+          content: "「Chance-Making-Company」を掲げ、未経験者や女性の活躍を強力に支援している急成長企業です。",
+          points: ["中途採用実績1000名以上", "女性比率 45.5% (業界トップクラス)", "徹底した入社時研修制度"],
+          image: "https://images.unsplash.com/photo-1427751840561-9852463b02e2?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 2,
+          tag: "重点訴求",
+          header: "残業抑制と「香川・愛媛」重点採用",
+          content: "施工管理でありながら、ICTの活用やチーム制の導入で、長時間労働の削減に本気で取り組んでいます。",
+          points: ["勤務地：中四国支店管轄（香川等希望考慮）", "残業：適切な管理（直行直帰OK）", "休日：完全週休2日制（土日祝）"],
+          image: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 3,
+          tag: "ライフイベント支援",
+          header: "資格取得で「将来の不安」をゼロに",
+          content: "市原様が心配されていた「長く働けるか」という点。資格があれば、どんなライフイベントがあっても復職が容易です。",
+          points: ["資格取得補助金・お祝い金制度", "専任サポート（キャリアカウンセラー）", "育児休暇等の取得促進"],
+          image: "https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 4,
+          tag: "勤務条件（Fact）",
+          header: "正社員としての確かな保障",
+          content: "賞与年2回、決算賞与など、頑張りがダイレクトに収入に反映される仕組みです。",
+          points: ["昇給年2回・賞与年2回支給", "各種手当（残業・現場・通勤）", "雇用形態：正社員"],
+          image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&q=80&w=800"
+        }
+      ]
+    }
+  ];
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState('jobs');
-  const [jobIndex, setJobIndex] = useState(0);
-  const [compIndex, setCompIndex] = useState(0);
-  const [slideIndex, setSlideIndex] = useState(0);
+  const currentJobIndex = currentSlide % jobSlides.length;
+  const currentSubSlideIndex = Math.floor(currentSlide / jobSlides.length);
+  
+  const totalJobSlides = jobSlides[0].slides.length;
+  const currentJobData = jobSlides[currentSlide >= 5 ? 1 : 0];
+  const currentSlideData = currentJobData.slides[currentSlide % 5];
 
-  const currentJob = JOB_TYPES[jobIndex];
-  const currentComp = COMPANIES[compIndex];
+  const totalCompanySubSlides = 4;
+  const currentCompanyIndex = Math.floor(currentSlide / totalCompanySubSlides);
+  const currentCompanySlideIndex = currentSlide % totalCompanySubSlides;
+  const currentCompanyData = companySlides[currentCompanyIndex];
+  const currentCompanySlideData = currentCompanyData?.slides[currentCompanySlideIndex];
 
- const nextSlide = (max: number) => 
-  setSlideIndex((prev: number) => (prev + 1) % max);
+  const nextSlide = () => {
+    const max = activeTab === 'job' ? 10 : companySlides.length * 4;
+    if (currentSlide < max - 1) setCurrentSlide(currentSlide + 1);
+  };
 
-const prevSlide = (max: number) => 
-  setSlideIndex((prev: number) => (prev - 1 + max) % max);
-  const resetSlide = () => setSlideIndex(0);
+  const prevSlide = () => {
+    if (currentSlide > 0) setCurrentSlide(currentSlide - 1);
+  };
+
+const handleTabChange = (tab: string) => {
+  setActiveTab(tab);
+  setCurrentSlide(0);
+};
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-12">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 p-4 md:p-8">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="bg-blue-600 p-2 rounded-lg text-white">
-              <TrendingUp size={24} />
-            </div>
-            <div>
-              <h1 className="font-bold text-xl tracking-tight">坂戸様向け：キャリア戦略・企業分析</h1>
-              <p className="text-xs text-slate-500">Fact-Based Career Roadmaps</p>
-            </div>
-          </div>
-          <div className="hidden md:block text-right">
-            <span className="text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-600 font-medium">
-              Update: 2026.04.14
-            </span>
-          </div>
-        </div>
-      </header>
+      <div className="max-w-5xl mx-auto mb-8 text-center">
+        <h1 className="text-3xl font-bold text-blue-900 mb-2">キャリアパス・企業比較 提案資料</h1>
+        <p className="text-slate-600">候補者：{candidateName} 様</p>
+      </div>
 
-      <main className="max-w-4xl mx-auto px-4 mt-8">
-        {/* Tabs */}
-        <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200 mb-8">
-          <button 
-            onClick={() => { setActiveTab('jobs'); resetSlide(); }}
-            className={`flex-1 py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'jobs' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
-          >
-            <Briefcase size={18} />
-            職種別キャリア訴求
-          </button>
-          <button 
-            onClick={() => { setActiveTab('companies'); resetSlide(); }}
-            className={`flex-1 py-3 px-4 rounded-lg font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'companies' ? 'bg-orange-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
-          >
-            <Building2 size={18} />
-            企業別詳細比較
-          </button>
+      {/* Main Tabs */}
+      <div className="max-w-5xl mx-auto mb-6 bg-white rounded-xl shadow-sm p-1 flex">
+        <button 
+          onClick={() => handleTabChange('job')}
+          className={`flex-1 py-3 px-4 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'job' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
+        >
+          <Briefcase size={20} />
+          職種別キャリア訴求
+        </button>
+        <button 
+          onClick={() => handleTabChange('company')}
+          className={`flex-1 py-3 px-4 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${activeTab === 'company' ? 'bg-orange-500 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
+        >
+          <Building2 size={20} />
+          企業別詳細比較
+        </button>
+      </div>
+
+      {/* Slide Container */}
+      <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden min-h-[600px] flex flex-col relative">
+        
+        {/* Progress Bar */}
+        <div className="w-full h-1.5 bg-slate-100">
+          <div 
+            className={`h-full transition-all duration-300 ${activeTab === 'job' ? 'bg-blue-600' : 'bg-orange-500'}`}
+            style={{ width: `${((currentSlide + 1) / (activeTab === 'job' ? 10 : companySlides.length * 4)) * 100}%` }}
+          ></div>
         </div>
 
-        {activeTab === 'jobs' ? (
-          <div className="space-y-6">
-            {/* Job Selector */}
-            <div className="flex flex-wrap gap-2">
-              {JOB_TYPES.map((job, idx) => (
-                <button
-                  key={job.id}
-                  onClick={() => { setJobIndex(idx); resetSlide(); }}
-                  className={`px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 border transition-all ${jobIndex === idx ? 'bg-blue-100 border-blue-600 text-blue-700' : 'bg-white border-slate-200 text-slate-600'}`}
-                >
-                  {job.icon}
-                  {job.title}
-                </button>
-              ))}
+        {/* Slide Content */}
+        <div className="flex-1 flex flex-col md:flex-row">
+          {/* Left Side: Image & Tags */}
+          <div className="w-full md:w-5/12 relative h-48 md:h-auto overflow-hidden">
+            <img 
+              src={activeTab === 'job' ? currentSlideData.image : currentCompanySlideData.image} 
+              alt="Slide visual"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute top-4 left-4">
+              <span className={`px-4 py-1.5 rounded-full text-white text-sm font-bold shadow-lg ${activeTab === 'job' ? 'bg-blue-600' : 'bg-orange-500'}`}>
+                {activeTab === 'job' ? currentSlideData.tag : currentCompanySlideData.tag}
+              </span>
             </div>
-
-            {/* Slide Container */}
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden min-h-[500px] flex flex-col">
-              <div className="p-6 md:p-10 flex-grow">
-                <div className="flex items-center justify-between mb-6">
-                  <span className="text-blue-600 font-bold tracking-widest text-xs uppercase">
-                    Step {slideIndex + 1} / {currentJob.slides.length}
-                  </span>
-                  <div className="h-1 flex-grow mx-4 bg-slate-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-blue-600 transition-all duration-300" 
-                      style={{ width: `${((slideIndex + 1) / currentJob.slides.length) * 100}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-8 items-center">
-                  <div className="space-y-4">
-                    <h2 className="text-2xl md:text-3xl font-black text-slate-800 leading-tight">
-                      {currentJob.slides[slideIndex].title}
-                    </h2>
-                    <p className="text-lg text-slate-600 leading-relaxed">
-                      {currentJob.slides[slideIndex].content}
-                    </p>
-
-                    {/* Dynamic Parts based on type */}
-                    {currentJob.slides[slideIndex].stats && (
-                      <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex items-center gap-3">
-                        <TrendingUp className="text-blue-600" />
-                        <span className="font-bold text-blue-800">{currentJob.slides[slideIndex].stats}</span>
-                      </div>
-                    )}
-
-                    {currentJob.slides[slideIndex].milestones && (
-                      <div className="space-y-2">
-                        {currentJob.slides[slideIndex].milestones.map((m, i) => (
-                          <div key={i} className="flex items-center gap-3 text-slate-700">
-                            <CheckCircle2 size={18} className="text-blue-600" />
-                            <span className="font-semibold">{m}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {currentJob.slides[slideIndex].checks && (
-                      <div className="grid grid-cols-1 gap-2">
-                        {currentJob.slides[slideIndex].checks.map((c, i) => (
-                          <div key={i} className="bg-slate-50 px-4 py-2 rounded-lg border border-slate-100 font-bold text-slate-700">
-                            ✓ {c}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {currentJob.slides[slideIndex].badge && (
-                      <span className="inline-block bg-orange-100 text-orange-700 px-4 py-1 rounded-full font-black text-sm uppercase">
-                        {currentJob.slides[slideIndex].badge}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="relative">
-                    {currentJob.slides[slideIndex].image ? (
-                      <img 
-                        src={currentJob.slides[slideIndex].image} 
-                        alt="Slide visualization" 
-                        className="rounded-2xl shadow-lg w-full h-64 md:h-80 object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-64 md:h-80 bg-slate-100 rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-300">
-                        <Target size={48} className="text-slate-300" />
-                      </div>
-                    )}
-                  </div>
-                </div>
+            {activeTab === 'company' && (
+              <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur p-3 rounded-lg shadow-lg border-l-4 border-orange-500">
+                <p className="text-xs text-slate-500 font-bold uppercase">対象企業</p>
+                <p className="font-bold text-orange-700">{currentCompanyData.name}</p>
               </div>
-
-              {/* Controls */}
-              <div className="bg-slate-50 p-4 flex justify-between items-center border-t border-slate-200">
-                <button 
-                  onClick={() => prevSlide(currentJob.slides.length)}
-                  className="p-3 rounded-full hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-blue-600"
-                >
-                  <ChevronLeft size={32} />
-                </button>
-                <div className="flex gap-2">
-                  {currentJob.slides.map((_, i) => (
-                    <div 
-                      key={i} 
-                      className={`h-2 rounded-full transition-all ${slideIndex === i ? 'w-8 bg-blue-600' : 'w-2 bg-slate-300'}`}
-                    />
-                  ))}
-                </div>
-                <button 
-                  onClick={() => nextSlide(currentJob.slides.length)}
-                  className="p-3 rounded-full hover:bg-white hover:shadow-md transition-all text-blue-600"
-                >
-                  <ChevronRight size={32} />
-                </button>
+            )}
+            {activeTab === 'job' && (
+              <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur p-3 rounded-lg shadow-lg border-l-4 border-blue-600">
+                <p className="text-xs text-slate-500 font-bold uppercase">職種</p>
+                <p className="font-bold text-blue-900">{currentJobData.title}</p>
               </div>
-            </div>
+            )}
           </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Company Selector */}
-            <div className="flex flex-wrap gap-2">
-              {COMPANIES.map((comp, idx) => (
-                <button
-                  key={comp.name}
-                  onClick={() => { setCompIndex(idx); resetSlide(); }}
-                  className={`px-4 py-2 rounded-full text-sm font-bold border transition-all ${compIndex === idx ? 'bg-orange-100 border-orange-600 text-orange-700' : 'bg-white border-slate-200 text-slate-600'}`}
-                >
-                  {comp.name}
-                </button>
-              ))}
-            </div>
 
-            {/* Slide Container (Companies) */}
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden min-h-[500px] flex flex-col">
-              <div className="p-6 md:p-10 flex-grow">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-orange-600 text-white text-[10px] font-black px-2 py-0.5 rounded">COMPANY FILE</span>
-                    <h3 className="font-bold text-slate-400 text-sm uppercase tracking-tighter">{currentComp.tag}</h3>
-                  </div>
-                  <span className="text-orange-600 font-bold tracking-widest text-xs">
-                    Page {slideIndex + 1} / {currentComp.slides.length}
-                  </span>
-                </div>
-
-                <div className="max-w-2xl mx-auto space-y-8">
-                  <h2 className="text-3xl md:text-4xl font-black text-slate-800 border-l-8 border-orange-600 pl-6">
-                    {currentComp.slides[slideIndex].title}
-                  </h2>
-                  
-                  <div className="space-y-6">
-                    <p className="text-xl text-slate-600 leading-relaxed font-medium">
-                      {currentComp.slides[slideIndex].content}
-                    </p>
-
-                    {currentComp.slides[slideIndex].points && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {currentComp.slides[slideIndex].points.map((p, i) => (
-                          <div key={i} className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center font-bold text-slate-700">
-                            {p}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {currentComp.slides[slideIndex].income && (
-                      <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-6 rounded-2xl border border-orange-100 shadow-inner">
-                        <div className="flex items-center gap-2 text-orange-700 mb-2">
-                          <Wallet size={20} />
-                          <span className="font-bold uppercase text-xs tracking-wider">収入シミュレーション</span>
-                        </div>
-                        <div className="text-2xl font-black text-slate-800">
-                          {currentComp.slides[slideIndex].income}
-                        </div>
-                      </div>
-                    )}
-
-                    {currentComp.slides[slideIndex].perks && (
-                      <div className="flex flex-wrap gap-2">
-                        {currentComp.slides[slideIndex].perks.map((p, i) => (
-                          <span key={i} className="bg-green-50 text-green-700 px-3 py-1 rounded-lg text-sm font-bold border border-green-100 flex items-center gap-1">
-                            <Heart size={14} /> {p}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {currentComp.slides[slideIndex].terms && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {currentComp.slides[slideIndex].terms.map((t, i) => {
-                          const [label, val] = t.split(': ');
-                          return (
-                            <div key={i} className="flex flex-col border-b border-slate-100 pb-2">
-                              <span className="text-[10px] text-slate-400 font-bold uppercase">{label}</span>
-                              <span className="font-bold text-slate-700">{val}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Controls */}
-              <div className="bg-slate-50 p-4 flex justify-between items-center border-t border-slate-200">
-                <button 
-                  onClick={() => prevSlide(currentComp.slides.length)}
-                  className="p-3 rounded-full hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-orange-600"
-                >
-                  <ChevronLeft size={32} />
-                </button>
-                <button 
-                  onClick={() => nextSlide(currentComp.slides.length)}
-                  className="px-8 py-3 bg-orange-600 text-white rounded-full font-black flex items-center gap-2 hover:bg-orange-700 transition-all shadow-lg active:scale-95"
-                >
-                  NEXT PAGE <ChevronRight size={20} />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Closing Message Section */}
-        <section className="mt-12 bg-gradient-to-br from-indigo-600 to-blue-700 rounded-3xl p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-          <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center flex-shrink-0">
-              <ShieldCheck size={48} className="text-blue-600" />
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-3xl font-black">坂戸さん、今の「不安」は「確信」に変えられます。</h3>
-              <p className="text-lg opacity-90 leading-relaxed max-w-2xl">
-                地方での厳しい営業環境でも「年間100台」という数字を出せる坂戸さんにとって、足りないのは努力ではなく、<b>「正当に評価される構造」</b>と<b>「資産になる技術」</b>です。
-                今回ご紹介した企業は、すべてその条件を満たしています。まずは一つ、気になる会社の詳細を深掘りしてみませんか？
+          {/* Right Side: Information */}
+          <div className="w-full md:w-7/12 p-8 flex flex-col">
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-slate-800 mb-4 leading-tight">
+                {activeTab === 'job' ? currentSlideData.header : currentCompanySlideData.header}
+              </h2>
+              <p className="text-slate-600 mb-8 leading-relaxed">
+                {activeTab === 'job' ? currentSlideData.content : currentCompanySlideData.content}
               </p>
-              <div className="pt-4 flex flex-wrap gap-4">
-                <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
-                  <MapPin size={16} /> 岩手・東北配属を全力交渉
-                </div>
-                <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
-                  <TrendingUp size={16} /> 5年後年収600万への設計図
-                </div>
+
+              <div className="space-y-4">
+                {(activeTab === 'job' ? currentSlideData.points : currentCompanySlideData.points).map((point, idx) => (
+                  <div key={idx} className="flex items-start gap-3">
+                    <div className={`mt-1 rounded-full p-1 ${activeTab === 'job' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
+                      <CheckCircle2 size={16} />
+                    </div>
+                    <span className="font-medium text-slate-700">{point}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer Fact/Info */}
+            <div className="mt-8 pt-6 border-t border-slate-100 flex items-start gap-2 text-slate-400 italic text-sm">
+              <Info size={16} className="shrink-0 mt-0.5" />
+              <p>{activeTab === 'job' ? currentSlideData.footer || "業界平均データに基づいた将来予測です。" : "※提出された求人票の情報を正確に反映しています。"}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="p-4 bg-slate-50 border-t flex items-center justify-between">
+          <div className="flex gap-2">
+            <button 
+              onClick={prevSlide}
+              disabled={currentSlide === 0}
+              className="p-3 rounded-full hover:bg-white border disabled:opacity-30 transition-all text-slate-600"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button 
+              onClick={nextSlide}
+              disabled={currentSlide === (activeTab === 'job' ? 9 : companySlides.length * 4 - 1)}
+              className="p-3 rounded-full hover:bg-white border disabled:opacity-30 transition-all text-slate-600"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </div>
+          <div className="text-sm font-bold text-slate-400">
+            {currentSlide + 1} / {activeTab === 'job' ? 10 : companySlides.length * 4}
+          </div>
+        </div>
+      </div>
+
+      {/* Message Section for Candidate */}
+      <div className="max-w-5xl mx-auto mt-12 bg-gradient-to-br from-orange-50 to-pink-50 rounded-3xl p-8 shadow-inner border border-white">
+        <div className="flex flex-col md:flex-row items-center gap-8">
+          <div className="w-24 h-24 rounded-full bg-white shadow-md flex items-center justify-center overflow-hidden shrink-0 border-4 border-white">
+             <Heart className="text-pink-400" size={48} />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-2xl font-bold text-slate-800 mb-4">{candidateName} 様へ</h3>
+            <div className="space-y-4 text-slate-700 leading-relaxed">
+              <p>
+                まずは、これまでお一人で不安と戦いながら、現場を支えてこられたこと、本当にお疲れ様でした。
+                徳島まで往復4時間の通勤や、自腹での負担、そして「味方がいない」と感じる中での勤務...。市原様がどれほど強い責任感を持って取り組まれてきたか、そのお話を聞くだけで頭が下がる思いです。
+              </p>
+              <p>
+                今回の転職で叶えたい<span className="bg-orange-200 px-1 rounded font-bold">「香川県内での安定」</span>と<span className="bg-orange-200 px-1 rounded font-bold">「自分と愛犬の時間」</span>。これは決して贅沢な望みではありません。
+                市原様が調理師時代に店舗マニュアルを一人で作り上げた実行力、そして施工管理補助として身につけた正確な事務処理能力は、どの企業も欲しがる素晴らしい「武器」です。
+              </p>
+              <p>
+                これからは、営業担当が「敵」ではなく「最大の味方」としてあなたを守る環境を選びましょう。
+                給与の不安がない、毎日ちゃんと眠れる、犬の世話ができる。そんな「当たり前の幸せ」を、一緒に取り戻していきたいと思っています。
+              </p>
+              <div className="flex flex-wrap gap-2 mt-4">
+                <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm">#香川県内勤務厳守</span>
+                <span className="bg-pink-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm">#残業ほぼなし</span>
+                <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm">#土日祝休み</span>
+                <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm">#正社員の安定</span>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </div>
 
-        <footer className="mt-8 text-center text-slate-400 text-sm">
-          <p>© 2026 Your Career Concierge. 全ての数値は提供資料に基づき作成されました。</p>
-        </footer>
-      </main>
+      {/* Footer */}
+      <div className="text-center mt-12 text-slate-400 text-sm">
+        <p>© 2024 Your Career Partner. すべての事実に寄り添い、あなたの未来を応援します。</p>
+      </div>
     </div>
   );
-}
+};
+
+export default App;
